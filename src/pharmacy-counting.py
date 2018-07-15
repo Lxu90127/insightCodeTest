@@ -4,9 +4,9 @@ import Objects as OBJ
 
 dataCounterMap = OBJ.Trie()
 
-inputFile = open( "test.txt", "r")
+inputFile = open( "input/itcont.txt", "r")
 
-outputFile = open("top_cost_drug.txt", "w")
+outputFile = open("output/top_cost_drug.txt", "w")
 
 idx = 0
 for line in inputFile:
