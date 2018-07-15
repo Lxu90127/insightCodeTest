@@ -6,8 +6,9 @@
 ####################################################################
 
 class InputObject():
-    def __init__(self, prescriber_name, drug_name, drug_cost):
-        self.prescriber_name = prescriber_name
+    def __init__(self, first_name, last_name, drug_name, drug_cost):
+        self.prescriber_first_name = first_name
+        self.prescriber_last_name = last_name
         self.drug_name = drug_name
         self.drug_cost = drug_cost
         
@@ -19,22 +20,42 @@ class InputObject():
     
     # static method
     def createInputObject( string ):
-        data = string.split(',')
-        #data[0] is id, which does not useful for this project
-        prescriber_last_name = data[1]
-        prescriber_first_name = data[2]
-        drug_name = data[3]
-        drug_cost = float(data[4])
-        prescriber_name = prescriber_first_name + "," + prescriber_last_name
-        input_object = InputObject(prescriber_name, drug_name, drug_cost)
+        subString = ""
+        isInQuotation = False
+        columnNum = 0
+        for s in string:
+            if s == '"':
+                if isInQuotation:
+                    isInQuotation = False
+                else:
+                    isInQuotation = True
+                continue
+            if s == ',' and isInQuotation is False:
+                columnNum = columnNum + 1
+                if columnNum == 2:
+                    prescriber_last_name = subString.upper()
+                if columnNum == 3:
+                    prescriber_first_name = subString.upper()
+                if columnNum == 4:
+                    drug_name = subString
+                subString = ""
+                continue
+            if s == ' ':
+                continue
+                        
+            subString = subString + s
+        
+        drug_cost = float(subString)
+        input_object = InputObject(prescriber_first_name, prescriber_last_name, drug_name, drug_cost)
         return input_object
         
         
 ##############################################################################
 # There are two places that I need to use data structure
-# 1. the children list in trie node
-# 2. printing the final result, where I need to put the data out from trie
-# and printing the result in desending order
+# 1. HashSet, where two strings have the same HashCode 
+# 2. the children list in trie node
+# 3. printing the final result, where I need to put the data out from trie
+# and printing the result in desending order (merge sort is a natural choice)
 # Thus, I choose linked list with both head and tail implementation which 
 #satisfy both requirement in an optimal manner
 #############################################################################
@@ -81,6 +102,16 @@ class LinkedList():
                 retString = retString + ", " + newPart
             node = node.nextNode
         return retString
+    
+    def contains(self,obj):
+        node = self.head
+        retVal = False
+        while node is not None:
+            if node.obj == obj:
+                retVal = True
+            break
+            node = node.nextNode
+        return retVal
         
     def sort(self):
         self.head = mergeSortList(self.head)
@@ -94,7 +125,51 @@ class LinkedList():
             print("{},{},{}.".format(node.obj.drug_name, str(node.obj.getNumOfPrescriber()), \
             str(node.obj.getTotalCost())), file =outputFile)
             node = node.nextNode
+            
+            
+##############################################################################
+# The following is the implementation of HashSet
+# Note that unlike java and cpp, arrays is not the basic data structure in python
+# rather, list is the basic data structure, thus, I have to use it for quick access
+# for hashset implementation
+#############################################################################
+            
+class HashSet():
+    def __init__(self):
+        self.table = []
+        idx = 0
+        while idx <= 26*26 + 1: # additonal one spot for none first or last name
+            idx = idx + 1
+            self.table.append([])
+            
+    def add( self, firstName, lastName):
+        fullName = firstName + ',' + lastName
+        if len(firstName) == 0 or len(lastName) == 0:
+            nameIdx = 0
+        else:
+            firstNameInitial = ord(firstName[0]) - ord('A')
+            lastNameInitial = ord(lastName[0]) - ord('A')
+            nameIdx = lastNameInitial * 26 + firstNameInitial + 1
         
+        targetList = self.table[nameIdx]
+        isInputNameExists = False
+        for name in targetList:
+            if name == fullName:
+                isInputNameExists = True
+                break
+        
+        if isInputNameExists is False:
+            targetList.append(fullName)
+            
+    def getSize(self):
+        totalSize = 0
+        idx = 0
+        while idx <= 26*26:
+            currentlistSize = len(self.table[idx])
+            totalSize  = totalSize + currentlistSize
+            idx = idx + 1
+        return totalSize
+            
 ##############################################################################
 # The following Object is trying to implement a replacement of HashMap and HashSet
 # namely --- Trie
@@ -110,7 +185,7 @@ class TrieNode():
         # using any advance functionality. 
         # it is very ez to replace it with a self-coded linked list, array or 
         # a table with 26 chars
-        self.children = LinkedList()
+        self.children = []
         self.isMainNode = False
         # depend on whether containedObject is None or not, the Trie can be 
         # used as HashTable or HashMap
@@ -130,14 +205,12 @@ class Trie():
         isIncreaseSizeByOne = False
         for char in string:
             foundInChilren = False
-            listNode = node.children.head
-            while listNode is not None:
-                if listNode.obj.char == char:
-                    node = listNode.obj
+            for child in node.children:
+                if child.char == char:
+                    node = child
                     foundInChilren = True
                     break
-                listNode = listNode.nextNode
-                
+
             if not foundInChilren:
                 isIncreaseSizeByOne = True
                 new_node = TrieNode(char)
@@ -189,19 +262,19 @@ class Trie():
     def getKeys(self):
         retList = LinkedList()
         initialString = ""
-        dfsHelper(self.root, retList, initialString )
+        dfsHelper(self.root, retList, initialString, False )
         return retList
         
     def getEntries(self):
         retList = LinkedList()
-        dfsHelper(self.root, retList)
+        initialString = ""
+        dfsHelper(self.root, retList, initialString, True)
         return retList
     
     # preString is None, get all Keys
     # preString is not None, get All Entries
 
-        
-      
+
 ##############################################################################
 # Contained Object 
 # we can use directly use InputObject as ContainedObject, but we should not 
@@ -210,17 +283,15 @@ class Trie():
 
 class ContainedObject():
     def __init__(self, inputObject : InputObject):
-        self.drug_name = inputObject.drug_name
+        self.drug_name = ""
         self.total_cost = inputObject.drug_cost
-        self.prescriber_name_set = Trie()
-        self.prescriber_name_set.put(inputObject.prescriber_name)
+        self.prescriber_name_set = HashSet()
+        self.prescriber_name_set.add(inputObject.prescriber_first_name, inputObject.prescriber_last_name )
         
     def add(self, inputObject: InputObject):
-        if self.drug_name != inputObject.drug_name:
-            print("error: trying to add two containedObject whose drug_name are not the same")  # debug use
         self.total_cost = self.total_cost + inputObject.drug_cost
-        self.prescriber_name_set.put(inputObject.prescriber_name)
-        
+        self.prescriber_name_set.add(inputObject.prescriber_first_name, inputObject.prescriber_last_name)
+
     def getTotalCost(self):
         return self.total_cost
     
@@ -240,8 +311,8 @@ class ContainedObject():
 # HELPER METHODS
 #############################################################################   
         
-def dfsHelper(node, resList, preString = None):
-    if preString is not None:
+def dfsHelper(node, resList, preString, isEntry):
+    if isEntry is False:
         currentString = preString + node.char
         if node.isMainNode:
             resList.append(currentString)
@@ -250,17 +321,17 @@ def dfsHelper(node, resList, preString = None):
         while listNode is not None:
             child = listNode.obj
             newString = str(currentString)
-            dfsHelper(child, resList, newString)
+            dfsHelper(child, resList, newString, isEntry)
             listNode = listNode.nextNode
     else:
+        currentString = preString + node.char
         if node.isMainNode:
+            node.containedObject.drug_name = currentString
             resList.append(node.containedObject)
         
-        listNode = node.children.head
-        while listNode is not None:
-            child = listNode.obj
-            dfsHelper(child, resList)
-            listNode = listNode.nextNode    
+        for child in node.children:
+            newString = str(currentString)
+            dfsHelper(child, resList, newString, isEntry)
             
 def mergeSortList( node : LinkedListNode):
     if node is None or node.nextNode is None:
