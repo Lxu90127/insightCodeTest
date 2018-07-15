@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-
 import Objects as OBJ
 
+inputFile = open( "input/itcont.txt", "r")
+outputFile = open("output/top_cost_drug.txt", "w")
+
+
 dataCounterMap = OBJ.Trie()
-
-inputFile = open( "itcont.txt", "r")
-
-outputFile = open("top_cost_drug.txt", "w")
 
 idx = 0
 for line in inputFile:
@@ -14,21 +13,19 @@ for line in inputFile:
     if idx == 1:
         continue
     string = str(line)
-    
     try:
         inputObject = OBJ.InputObject.createInputObject(string)
     except:
-        print("invalid String:" + line)
+    # debug use
+    #    print("invalid String:" + line)
         continue
     
     dataCounterMap.put(inputObject.drug_name, inputObject)
     
-    if idx % 100000 == 0:
-        print(idx)
+    # debug use
+    #if idx % 100000 == 0:
+    #    print(idx)
     
-    
-print(idx)
-
 entryList = dataCounterMap.getEntries()
 entryList.sort()
 
