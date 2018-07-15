@@ -51,13 +51,9 @@ class InputObject():
         
         
 ##############################################################################
-# There are two places that I need to use data structure
-# 1. HashSet, where two strings have the same HashCode 
-# 2. the children list in trie node
-# 3. printing the final result, where I need to put the data out from trie
+# Two head LinkedList Implementation
+# printing the final result, where I need to put the data out from trie
 # and printing the result in desending order (merge sort is a natural choice)
-# Thus, I choose linked list with both head and tail implementation which 
-#satisfy both requirement in an optimal manner
 #############################################################################
         
 class LinkedListNode():
@@ -128,10 +124,10 @@ class LinkedList():
             
             
 ##############################################################################
-# The following is the implementation of HashSet
-# Note that unlike java and cpp, arrays is not the basic data structure in python
-# rather, list is the basic data structure, thus, I have to use it for quick access
-# for hashset implementation
+# HashSet Implementation: (Key is the full name of the prescriber)
+# Since in python, the default data structure is list rather than arrays
+# thus HashSet is implemented as list of list 
+# HashCode is the initial of first name and last name
 #############################################################################
             
 class HashSet():
@@ -171,9 +167,9 @@ class HashSet():
         return totalSize
             
 ##############################################################################
-# The following Object is trying to implement a replacement of HashMap and HashSet
-# namely --- Trie
-# I am going to implment TrieNode and Trie
+# Trie Implementation: Another implemtation of Map
+# the reason is that the HashMap implementatin is very similar to HashSet.
+# Thus, I am implement a another implementation for Map
 # the insert complexity is O(m) where m stands for the length of the drug_name
 # chars. Which is can be considered as O(1)
 #############################################################################
@@ -375,17 +371,3 @@ def mergeTwoSortedList(node1 : LinkedListNode, node2 : LinkedListNode):
         currentNode.nextNode = node2
     
     return dummyNode.nextNode
-    
-    
-        
-        
-        
-    
-         
-        
-
-
-        
-    
-
-        
