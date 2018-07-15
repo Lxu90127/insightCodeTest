@@ -19,6 +19,11 @@ for line in inputFile:
 
 entryList = dataCounterMap.getEntries()
 entryList.sort()
+
+# print the title to the output file
+
+print("drug_name,num_prescriber,total_cost", file =outputFile)
+
 entryList.printToFile(outputFile)
 
 inputFile.close()
